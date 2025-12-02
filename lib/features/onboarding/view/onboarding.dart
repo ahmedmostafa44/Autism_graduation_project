@@ -13,7 +13,11 @@ class _OnboardingState extends State<Onboarding> {
     return Scaffold(
       body: Column(
         children: [
-          
+          Stack(
+            children: [
+              Container(decoration: BoxDecoration(color: Colors.grey)),
+            ],
+          ),
         ],
       ),
     );
