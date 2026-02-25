@@ -1,8 +1,8 @@
 // lib/features/dashboard/presentation/widgets/sidebar_content.dart
 import 'package:autism_app/features/auth/bloc/auth_bloc.dart';
 import 'package:autism_app/features/auth/bloc/auth_event.dart';
-import 'package:autism_app/utils/contansts.dart';
-import 'package:autism_app/utils/widgets/sidebar_item.dart';
+import 'package:autism_app/core/utils/contansts.dart';
+import 'package:autism_app/core/utils/widgets/sidebar_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

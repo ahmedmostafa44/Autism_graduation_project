@@ -1,5 +1,5 @@
 // lib/features/dashboard/presentation/widgets/stat_card.dart
-import 'package:autism_app/utils/contansts.dart';
+import 'package:autism_app/core/utils/contansts.dart';
 import 'package:flutter/material.dart';
 
 class StatCard extends StatelessWidget {

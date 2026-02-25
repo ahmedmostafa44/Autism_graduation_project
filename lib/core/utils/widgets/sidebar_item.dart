@@ -1,5 +1,5 @@
 // lib/features/dashboard/presentation/widgets/sidebar_item.dart
-import 'package:autism_app/utils/contansts.dart';
+import 'package:autism_app/core/utils/contansts.dart';
 import 'package:flutter/material.dart';
 
 class SidebarItem extends StatelessWidget {

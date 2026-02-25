@@ -1,7 +1,7 @@
 // lib/features/auth/presentation/pages/login_page.dart
 import 'package:autism_app/features/auth/bloc/auth_bloc.dart';
 import 'package:autism_app/features/auth/bloc/auth_event.dart';
-import 'package:autism_app/utils/contansts.dart';
+import 'package:autism_app/core/utils/contansts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
