@@ -17,12 +17,12 @@ class SidebarContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Brand/Logo Area
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0, bottom: 32.0),
+          const Padding(
+            padding: EdgeInsets.only(left: 12.0, bottom: 32.0),
             child: Row(
               children: [
-                const Icon(Icons.bolt, color: AppColors.primary, size: 30),
-                const SizedBox(width: 10),
+                Icon(Icons.bolt, color: AppColors.primary, size: 30),
+                SizedBox(width: 10),
                 Text(
                   "LOVABLE",
                   style: TextStyle(
@@ -36,14 +36,14 @@ class SidebarContent extends StatelessWidget {
           ),
 
           // Navigation Links
-          SidebarItem(
+          const SidebarItem(
             icon: Icons.grid_view_rounded,
             label: "Dashboard",
             isActive: true,
           ),
-          SidebarItem(icon: Icons.analytics_outlined, label: "Analytics"),
-          SidebarItem(icon: Icons.layers_outlined, label: "Projects"),
-          SidebarItem(icon: Icons.settings_outlined, label: "Settings"),
+          const SidebarItem(icon: Icons.analytics_outlined, label: "Analytics"),
+          const SidebarItem(icon: Icons.layers_outlined, label: "Projects"),
+          const SidebarItem(icon: Icons.settings_outlined, label: "Settings"),
 
           const Spacer(), // Pushes the logout button to the bottom
           // Logout Section

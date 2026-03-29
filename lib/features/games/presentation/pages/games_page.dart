@@ -1,185 +1,280 @@
-import 'package:autism_app/core/utils/contansts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:autism_app/core/theme/app_theme.dart';
+import 'package:autism_app/core/bloc/theme_bloc.dart';
+import 'package:autism_app/core/widgets/galaxy_widgets.dart';
 import '../bloc/games_bloc.dart';
 import '../../data/models/game_model.dart';
 
 class GamesPage extends StatelessWidget {
   const GamesPage({super.key});
 
-  static const _categories = ['All', 'Feelings', 'Words', 'Social', 'Math', 'Colors'];
+  static const _categories = [
+    'All',
+    'Feelings',
+    'Words',
+    'Social',
+    'Math',
+    'Colors'
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).maybePop(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.border)),
-                      child: const Icon(Icons.arrow_back, size: 18),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Text('Educational Games', style: AppTextStyles.heading2),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+    final isDark = context.watch<ThemeBloc>().state.isDark;
 
-            // Category filter
-            BlocBuilder<GamesBloc, GamesState>(
-              builder: (context, state) {
-                final selected = state is GamesLoaded ? state.selectedCategory : 'All';
-                return SizedBox(
-                  height: 40,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: _categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final cat = _categories[index];
-                      final isSelected = cat == selected;
-                      return GestureDetector(
-                        onTap: () =>
-                            context.read<GamesBloc>().add(GamesCategorySelected(cat)),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primary : AppColors.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: isSelected ? AppColors.primary : AppColors.border),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Column(
+        children: [
+          GalaxyAppBar(title: 'Educational Games'),
+          const SizedBox(height: 4),
+          // Category chips
+          BlocBuilder<GamesBloc, GamesState>(
+            builder: (context, state) {
+              final selected =
+                  state is GamesLoaded ? state.selectedCategory : 'All';
+              return SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _categories.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final cat = _categories[index];
+                    final isSelected = cat == selected;
+                    return GestureDetector(
+                      onTap: () => context
+                          .read<GamesBloc>()
+                          .add(GamesCategorySelected(cat)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: isSelected
+                              ? const LinearGradient(colors: [
+                                  GalaxyColors.nebulaPurple,
+                                  GalaxyColors.cosmicBlue,
+                                ])
+                              : null,
+                          color:
+                              isSelected ? null : GalaxyColors.surface(isDark),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.transparent
+                                : GalaxyColors.border(isDark),
                           ),
-                          child: Text(
-                            cat,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                              color: isSelected ? Colors.white : AppColors.textSecondary,
-                            ),
-                          ),
+                          boxShadow: isSelected && isDark
+                              ? [
+                                  BoxShadow(
+                                      color: GalaxyColors.nebulaPurple
+                                          .withOpacity(0.4),
+                                      blurRadius: 10)
+                                ]
+                              : null,
                         ),
-                      );
-                    },
-                  ),
-                );
+                        child: Text(cat,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? Colors.white
+                                  : GalaxyColors.textSecond(isDark),
+                              fontFamily: 'Nunito',
+                            )),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: BlocBuilder<GamesBloc, GamesState>(
+              builder: (context, state) {
+                if (state is GamesLoading || state is GamesInitial) {
+                  return Center(
+                      child: CircularProgressIndicator(
+                          color: GalaxyColors.nebulaViolet));
+                }
+                if (state is GamesLoaded) {
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: state.filteredGames.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) => _GameCard(
+                        game: state.filteredGames[index], isDark: isDark),
+                  );
+                }
+                return const SizedBox();
               },
             ),
-            const SizedBox(height: 16),
-
-            // Games list
-            Expanded(
-              child: BlocBuilder<GamesBloc, GamesState>(
-                builder: (context, state) {
-                  if (state is GamesLoading || state is GamesInitial) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (state is GamesLoaded) {
-                    final games = state.filteredGames;
-                    return ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: games.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) => _GameCard(game: games[index]),
-                    );
-                  }
-                  return const SizedBox();
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
+// Route mapping: gameId → router path
+const _gameRoutes = {
+  '1': '/games/emotion-match',
+  '2': '/games/word-builder',
+  '5': '/games/color-match',
+  '4': '/games/number-fun',
+  '9': '/games/sequencing',
+  '10': '/games/color-sorting',
+};
+
 class _GameCard extends StatelessWidget {
   final GameModel game;
-  const _GameCard({required this.game});
+  final bool isDark;
+  const _GameCard({required this.game, required this.isDark});
 
-  Color get _bgColor {
-    switch (game.category) {
-      case 'Feelings': return AppColors.gamesCardBg;
-      case 'Social':   return AppColors.speakCardBg;
-      case 'Words':    return AppColors.subscriptionCardBg;
-      default:         return AppColors.surface;
-    }
-  }
+  static const _catGradients = {
+    'Feelings': [Color(0xFF7C3AED), Color(0xFFEC4899)],
+    'Words': [Color(0xFF2563EB), Color(0xFF7C3AED)],
+    'Social': [Color(0xFF059669), Color(0xFF0EA5E9)],
+    'Math': [Color(0xFFF97316), Color(0xFFEF4444)],
+    'Colors': [Color(0xFFEC4899), Color(0xFFF97316)],
+  };
+
+  List<Color> get _gradient => (_catGradients[game.category] ??
+          [GalaxyColors.nebulaViolet, GalaxyColors.cosmicBlue])
+      .cast<Color>();
+
+  bool get _hasRoute => _gameRoutes.containsKey(game.id) && !game.isLocked;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _bgColor, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.6), borderRadius: BorderRadius.circular(12)),
-            child: Center(child: Text(game.emoji, style: const TextStyle(fontSize: 26))),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(game.title, style: AppTextStyles.heading3),
-                    if (game.isLocked) ...[
-                      const SizedBox(width: 6),
-                      const Icon(Icons.lock, size: 14, color: AppColors.textSecondary),
-                    ],
-                  ],
+    return GestureDetector(
+      onTap: _hasRoute ? () => context.push(_gameRoutes[game.id]!) : null,
+      child: GalaxyCard(
+        padding: const EdgeInsets.all(16),
+        glowing: game.progress != null && game.progress! > 0.7,
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: game.isLocked
+                      ? [Colors.grey.shade600, Colors.grey.shade700]
+                      : _gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 2),
-                Text(game.category, style: AppTextStyles.caption),
-                if (game.progress != null) ...[
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: game.progress,
-                      backgroundColor: AppColors.progressBg,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.progressBar),
-                      minHeight: 6,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: !game.isLocked
+                    ? [
+                        BoxShadow(
+                          color:
+                              _gradient.first.withOpacity(isDark ? 0.5 : 0.25),
+                          blurRadius: 12,
+                          spreadRadius: -2,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Center(
+                child: Text(game.emoji, style: const TextStyle(fontSize: 26)),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(game.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: game.isLocked
+                                ? GalaxyColors.textSecond(isDark)
+                                : GalaxyColors.textPrimary(isDark),
+                            fontFamily: 'Nunito',
+                          )),
+                      if (game.isLocked) ...[
+                        const SizedBox(width: 6),
+                        Icon(Icons.lock_rounded,
+                            size: 13, color: GalaxyColors.textSecond(isDark)),
+                      ],
+                      if (_hasRoute) ...[
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: GalaxyColors.auroraGreen.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color:
+                                    GalaxyColors.auroraGreen.withOpacity(0.3)),
+                          ),
+                          child: const Text('PLAY',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: GalaxyColors.auroraGreen,
+                                fontFamily: 'Nunito',
+                              )),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(game.category,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: GalaxyColors.textSecond(isDark),
+                        fontFamily: 'Nunito',
+                      )),
+                  if (game.progress != null) ...[
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: game.progress,
+                        backgroundColor: GalaxyColors.border(isDark),
+                        valueColor: AlwaysStoppedAnimation(_gradient.first),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (game.progress != null) ...[
+              const SizedBox(width: 12),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${(game.progress! * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: _gradient.first,
+                      fontFamily: 'Nunito',
                     ),
                   ),
+                  Icon(Icons.star_rounded,
+                      size: 14, color: GalaxyColors.solarGold),
                 ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          if (game.progress != null)
-            Row(
-              children: [
-                const Icon(Icons.star, size: 16, color: AppColors.warning),
-                const SizedBox(width: 3),
-                Text('${(game.progress! * 100).toInt()}%',
-                    style: AppTextStyles.body2
-                        .copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-              ],
-            ),
-        ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
