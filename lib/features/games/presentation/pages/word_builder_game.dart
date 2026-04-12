@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:autism_app/core/services/game_result_service.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
@@ -53,6 +54,15 @@ class _WordBuilderGameState extends State<WordBuilderGame>
 
   @override
   void dispose() {
+    if (_score > 0) {
+      GameResultService.instance.save(
+        gameId: 'word_builder',
+        gameName: 'Word Builder',
+        score: _score,
+        maxScore: _score,
+        durationSeconds: 0,
+      );
+    }
     _shakeCtrl.dispose();
     super.dispose();
   }

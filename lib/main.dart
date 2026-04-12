@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:autism_app/core/services/gemini_service.dart';
 import 'package:autism_app/firebase_options.dart';
@@ -19,26 +20,19 @@ import 'package:autism_app/features/progress/presentation/bloc/progress_bloc.dar
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ── Gemini init ──────────────────────────────────────────────────────────
+  await dotenv.load(fileName: ".env");
   GeminiService.init();
 
-  // ── Firebase init ────────────────────────────────────────────────────────
-  // Safe init: skips Firebase if you haven't run `flutterfire configure` yet.
-  // The app runs in LOCAL MODE (mock login) until you connect Firebase.
-  // To activate real Firebase:
-  //   1. Go to https://console.firebase.google.com → create project
-  //   2. Run:  dart pub global activate flutterfire_cli
-  //   3. Run:  flutterfire configure   (in this project folder)
-  //   4. That's it — firebase_options.dart gets auto-generated with your keys!
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
     // Firebase not configured yet — app continues in local/mock mode
-    debugPrint('⚠️  Firebase not initialized. Running in local mode. Error: $e');
+    debugPrint(
+        '⚠️  Firebase not initialized. Running in local mode. Error: $e');
   }
-  
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -83,8 +77,10 @@ class _AutismAppState extends State<AutismApp> {
         BlocProvider(create: (_) => GamesBloc()..add(GamesLoadRequested())),
         BlocProvider(create: (_) => ChatBloc()..add(ChatInitialized())),
         BlocProvider(create: (_) => SpeakBloc()..add(SpeakLoadRequested())),
-        BlocProvider(create: (_) => CommunityBloc()..add(CommunityLoadRequested())),
-        BlocProvider(create: (_) => ProgressBloc()..add(ProgressLoadRequested())),
+        BlocProvider(
+            create: (_) => CommunityBloc()..add(CommunityLoadRequested())),
+        BlocProvider(
+            create: (_) => ProgressBloc()..add(ProgressLoadRequested())),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {

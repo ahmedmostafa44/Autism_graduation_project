@@ -99,14 +99,16 @@ class _ColorMatchGameState extends State<ColorMatchGame>
     setState(() {
       _lives--;
       _lastCorrect = false;
-      if (_lives <= 0) _gameOver = true;
-      GameResultService.instance.save(
-          gameId: 'color_match',
-          gameName: 'Color Match',
-          score: _score,
-          maxScore: _score + 10,
-          durationSeconds: 0,
-          extras: {'rounds': 1});
+      if (_lives <= 0) {
+        _gameOver = true;
+        GameResultService.instance.save(
+            gameId: 'color_match',
+            gameName: 'Color Match',
+            score: _score,
+            maxScore: _score + 10,
+            durationSeconds: 0,
+            extras: {'rounds': 1});
+      }
     });
     if (!_gameOver) {
       _feedbackCtrl.forward(from: 0).then((_) => _nextRound());

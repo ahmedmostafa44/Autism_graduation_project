@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:autism_app/features/progress/data/models/game_result.dart';
 import 'package:autism_app/features/progress/data/repositories/progress_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,9 @@ class GameResultService {
   static final instance = GameResultService._();
 
   final _repo = ProgressRepository();
+  final _onSavedCtrl = StreamController<void>.broadcast();
+
+  Stream<void> get onResultSaved => _onSavedCtrl.stream;
 
   Future<void> save({
     required String gameId,
@@ -31,6 +35,7 @@ class GameResultService {
     );
     try {
       await _repo.saveResult(result);
+      _onSavedCtrl.add(null);
     } catch (e) {
       debugPrint('⚠️  GameResultService.save failed: $e');
     }

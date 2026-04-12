@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:autism_app/core/services/game_result_service.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
@@ -131,6 +132,13 @@ class _EmotionMatchGameState extends State<EmotionMatchGame>
       if (_matches == _cards.length ~/ 2) {
         setState(() => _gameWon = true);
         _winController.forward(from: 0);
+        GameResultService.instance.save(
+          gameId: 'emotion_match',
+          gameName: 'Emotion Match',
+          score: 100 - math.min(_moves * 2, 50),
+          maxScore: 100,
+          durationSeconds: 0,
+        );
       }
     } else {
       await Future.delayed(const Duration(milliseconds: 400));

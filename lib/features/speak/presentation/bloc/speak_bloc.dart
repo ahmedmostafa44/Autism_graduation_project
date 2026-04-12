@@ -1,15 +1,27 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../data/models/phrase_model.dart';
 
 part 'speak_event.dart';
 part 'speak_state.dart';
 
 class SpeakBloc extends Bloc<SpeakEvent, SpeakState> {
+  final FlutterTts _tts = FlutterTts();
+
   SpeakBloc() : super(SpeakInitial()) {
+    _initTts();
     on<SpeakLoadRequested>(_onLoad);
     on<SpeakCategorySelected>(_onCategorySelected);
     on<SpeakPhraseTriggered>(_onPhraseTriggered);
     on<SpeakFavoriteToggled>(_onFavoriteToggled);
+  }
+
+  Future<void> _initTts() async {
+    await _tts.setLanguage("en-US");
+    await _tts.setSpeechRate(0.5); // slowed down slightly for accessibility
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+    await _tts.awaitSpeakCompletion(true);
   }
 
   static const _allPhrases = [
@@ -40,9 +52,21 @@ class SpeakBloc extends Bloc<SpeakEvent, SpeakState> {
 
   Future<void> _onPhraseTriggered(SpeakPhraseTriggered event, Emitter<SpeakState> emit) async {
     if (state is SpeakLoaded) {
-      emit((state as SpeakLoaded).copyWith(speakingPhraseId: event.phraseId));
-      await Future.delayed(const Duration(seconds: 1));
-      if (state is SpeakLoaded) {
+      final current = state as SpeakLoaded;
+      
+      // Cancel previous speech if any
+      await _tts.stop();
+      
+      // Update UI to show speaking state for this phrase
+      emit(current.copyWith(speakingPhraseId: event.phraseId));
+      
+      final phrase = current.phrases.firstWhere((p) => p.id == event.phraseId);
+      
+      // Speak and wait for completion
+      await _tts.speak(phrase.text);
+       
+      // Clear speaking state only if the current phrase is still the one speaking
+      if (state is SpeakLoaded && (state as SpeakLoaded).speakingPhraseId == event.phraseId) {
         emit((state as SpeakLoaded).copyWith(clearSpeaking: true));
       }
     }

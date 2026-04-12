@@ -365,25 +365,35 @@ class ReportService {
         padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: pw.BoxDecoration(
             color: bg, borderRadius: pw.BorderRadius.circular(8)),
-        child: pw.Row(children: [
-          pw.Expanded(
-            child: pw.Text(gameLabel,
-                style: pw.TextStyle(font: fontBold, fontSize: 11, color: dark)),
-          ),
-          pw.Text('${g.plays} plays  |  Best: ${g.bestScore}',
-              style: pw.TextStyle(font: font, fontSize: 10, color: grey)),
-          pw.SizedBox(width: 12),
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: pw.BoxDecoration(
-              color: PdfColor(color.red, color.green, color.blue, 0.15),
-              borderRadius: pw.BorderRadius.circular(6),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Row(children: [
+              pw.Expanded(
+                child: pw.Text(gameLabel,
+                    style: pw.TextStyle(font: fontBold, fontSize: 11, color: dark)),
+              ),
+              pw.Text('${g.plays} plays  |  Best: ${g.bestScore}',
+                  style: pw.TextStyle(font: font, fontSize: 10, color: grey)),
+              pw.SizedBox(width: 12),
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor(color.red, color.green, color.blue, 0.15),
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text(pct,
+                    style:
+                        pw.TextStyle(font: fontBold, fontSize: 11, color: color)),
+              ),
+            ]),
+            pw.SizedBox(height: 6),
+            pw.Text(
+              'Benefit: ${_getGameBenefit(g.gameId)}',
+              style: pw.TextStyle(font: font, fontSize: 9, color: grey),
             ),
-            child: pw.Text(pct,
-                style:
-                    pw.TextStyle(font: fontBold, fontSize: 11, color: color)),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -453,6 +463,25 @@ class ReportService {
         child: pw.Text(text,
             style: pw.TextStyle(font: font, fontSize: 10, color: color)),
       );
+
+  String _getGameBenefit(String gameId) {
+    switch (gameId) {
+      case 'emotion_match':
+        return 'Enhances emotional recognition by linking facial expressions to feelings.';
+      case 'word_builder':
+        return 'Improves vocabulary, spelling, and language comprehension.';
+      case 'color_match':
+        return 'Develops visual discrimination and cognitive association skills.';
+      case 'number_fun':
+        return 'Strengthens foundational math and numerical reasoning capabilities.';
+      case 'sequencing':
+        return 'Fosters logical thinking, order recognition, and sequential planning.';
+      case 'color_sorting':
+        return 'Boosts categorization skills and fine motor coordination.';
+      default:
+        return 'Supports cognitive development and interactive learning.';
+    }
+  }
 
   // ── Date helpers ──────────────────────────────────────────────────────────
   String _dateLabel() {

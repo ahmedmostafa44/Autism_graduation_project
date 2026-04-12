@@ -12,47 +12,75 @@ class ProgressRepository {
 
   String? get _uid => _auth.currentUser?.uid;
 
+  bool get isReal => _ready && _uid != null;
+
+  static final List<GameResult> _localResults = [];
+
   // ── Save a game result ────────────────────────────────────────────────────
 
   Future<void> saveResult(GameResult result) async {
-    if (!_ready || _uid == null) {
-      debugPrint('📊 [Progress] local mode — result not saved: ${result.gameName} ${result.score}/${result.maxScore}');
+    if (!isReal) {
+      debugPrint('📊 [Progress] local mode — result saved locally: ${result.gameName} ${result.score}/${result.maxScore}');
+      _localResults.insert(0, result);
       return;
     }
-    await _db
-        .collection('users')
-        .doc(_uid)
-        .collection('gameResults')
-        .add(result.toFirestore());
+    try {
+      await _db
+          .collection('users')
+          .doc(_uid)
+          .collection('gameResults')
+          .add(result.toFirestore());
+    } catch (e) {
+      debugPrint('⚠️ [Progress] Firestore save failed, falling back to local: $e');
+      _localResults.insert(0, result);
+    }
   }
 
   // ── Fetch last N results ──────────────────────────────────────────────────
 
   Future<List<GameResult>> fetchRecentResults({int limit = 50}) async {
-    if (!_ready || _uid == null) return [];
-    final snap = await _db
-        .collection('users')
-        .doc(_uid)
-        .collection('gameResults')
-        .orderBy('playedAt', descending: true)
-        .limit(limit)
-        .get();
-    return snap.docs.map(GameResult.fromFirestore).toList();
+    if (!isReal) return _localResults.take(limit).toList();
+    try {
+      final snap = await _db
+          .collection('users')
+          .doc(_uid)
+          .collection('gameResults')
+          .orderBy('playedAt', descending: true)
+          .limit(limit)
+          .get();
+      
+      // Merge local results (that failed to save to firestore) with firestore results
+      final fbResults = snap.docs.map(GameResult.fromFirestore).toList();
+      final all = [..._localResults, ...fbResults];
+      // Sort in memory just in case
+      all.sort((a, b) => b.playedAt.compareTo(a.playedAt));
+      return all.take(limit).toList();
+    } catch (e) {
+      debugPrint('⚠️ [Progress] Firestore fetch failed, using local: $e');
+      return _localResults.take(limit).toList();
+    }
   }
 
   // ── Fetch results for a specific game ────────────────────────────────────
 
   Future<List<GameResult>> fetchResultsForGame(String gameId, {int limit = 20}) async {
-    if (!_ready || _uid == null) return [];
-    final snap = await _db
-        .collection('users')
-        .doc(_uid)
-        .collection('gameResults')
-        .where('gameId', isEqualTo: gameId)
-        .orderBy('playedAt', descending: true)
-        .limit(limit)
-        .get();
-    return snap.docs.map(GameResult.fromFirestore).toList();
+    if (!isReal) return _localResults.where((r) => r.gameId == gameId).take(limit).toList();
+    try {
+      final snap = await _db
+          .collection('users')
+          .doc(_uid)
+          .collection('gameResults')
+          .where('gameId', isEqualTo: gameId)
+          .orderBy('playedAt', descending: true)
+          .limit(limit)
+          .get();
+      final fbResults = snap.docs.map(GameResult.fromFirestore).toList();
+      final all = [..._localResults.where((r) => r.gameId == gameId), ...fbResults];
+      all.sort((a, b) => b.playedAt.compareTo(a.playedAt));
+      return all.take(limit).toList();
+    } catch (e) {
+      return _localResults.where((r) => r.gameId == gameId).take(limit).toList();
+    }
   }
 
   // ── Compute streak (consecutive days with at least 1 game) ───────────────

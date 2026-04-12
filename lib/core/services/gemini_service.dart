@@ -1,12 +1,22 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
   GeminiService._();
   static final instance = GeminiService._();
 
-  // 🔑 IMPORTANT: Replace with your actual key
-  static const apiKey = 'AIzaSyDUDU3Kx-ktdEr6Dwap6Bh-qUj1X1mlX0Q';
+  // 🔑 IMPORTANT: Reading key from .env file
+  static String get apiKey {
+    final key = dotenv.env['GEMINI_API_KEY'] ?? dotenv.env['API_KEY'];
+    if (key != null && key.isNotEmpty) return key.trim();
+    
+    // If exact name wasn't used, look for any environment variable starting with "AIza"
+    for (final value in dotenv.env.values) {
+      if (value.trim().startsWith('AIza')) return value.trim();
+    }
+    return '';
+  }
 
   static const _systemPrompt =
       'You are Buddy, a warm AI friend for children with ASD. '
@@ -46,8 +56,7 @@ class GeminiService {
         // Use the updated 'chat' method signature
         final response = await Gemini.instance.chat(
           chatHistory,
-          // Explicitly use the 2026 stable model ID
-          modelName: 'models/gemini-1.5-flash', 
+          modelName: 'gemini-2.5-flash', 
         );
 
         // Note: systemPrompt is often handled via the first history entry 
