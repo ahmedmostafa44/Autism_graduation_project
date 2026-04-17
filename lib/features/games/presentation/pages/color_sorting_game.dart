@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
+import 'package:autism_app/core/services/audio_service.dart';
+import 'package:autism_app/core/widgets/game_guide_dialog.dart';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 class _ColorGroup {
@@ -77,6 +79,17 @@ class _ColorSortingGameState extends State<ColorSortingGame>
     _itemEnterCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300));
     _startRound();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showGuide());
+  }
+
+  void _showGuide() {
+    GameGuideDialog.show(
+      context,
+      title: 'Color Sorting',
+      description: 'Sort the items by dropping them onto the matching color bucket!',
+      icon: '🌈',
+      isDark: context.read<ThemeBloc>().state.isDark,
+    );
   }
 
   @override
@@ -118,6 +131,12 @@ class _ColorSortingGameState extends State<ColorSortingGame>
   void _drop(_ColorGroup bucket) {
     if (_current == null || _lastCorrect != null) return;
     final correct = _current!.group.name == bucket.name;
+
+    if (correct) {
+      AudioService.instance.playSuccessSound();
+    } else {
+      AudioService.instance.playFailureSound();
+    }
 
     setState(() {
       _lastCorrect = correct;
@@ -188,6 +207,14 @@ class _ColorSortingGameState extends State<ColorSortingGame>
               fontSize: 17, fontWeight: FontWeight.w800,
               color: GalaxyColors.textPrimary(isDark), fontFamily: 'Nunito',
             ))),
+            IconButton(
+              icon: const Icon(Icons.help_outline_rounded),
+              color: GalaxyColors.textPrimary(isDark),
+              onPressed: _showGuide,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: 8),
             // Stats
             Row(children: [
               _MiniStat(icon: '✅', value: '$_correct', color: GalaxyColors.auroraGreen),

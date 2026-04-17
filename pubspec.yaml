@@ -37,6 +37,7 @@ dependencies:
   pdf:
     ^3.10.8 # PDF generation for parent report
   flutter_dotenv: ^6.0.0
+  audioplayers: ^6.6.0
     # Print / share PDF
     # Google Gemini Flutter SDK
 
@@ -50,4 +51,5 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/sounds/
     - .env

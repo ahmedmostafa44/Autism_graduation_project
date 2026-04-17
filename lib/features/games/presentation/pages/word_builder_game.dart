@@ -5,6 +5,8 @@ import 'package:autism_app/core/services/game_result_service.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
+import 'package:autism_app/core/services/audio_service.dart';
+import 'package:autism_app/core/widgets/game_guide_dialog.dart';
 
 class _WordChallenge {
   final String word;
@@ -50,6 +52,17 @@ class _WordBuilderGameState extends State<WordBuilderGame>
     _shake = Tween(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn));
     _loadChallenge();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showGuide());
+  }
+
+  void _showGuide() {
+    GameGuideDialog.show(
+      context,
+      title: 'Word Builder',
+      description: 'Tap the letters to spell the word that matches the picture and hint!',
+      icon: '✏️',
+      isDark: context.read<ThemeBloc>().state.isDark,
+    );
   }
 
   @override
@@ -98,11 +111,13 @@ class _WordBuilderGameState extends State<WordBuilderGame>
     if (_placed.length != _current.word.length) return;
     final built = _placed.join();
     if (built == _current.word) {
+      AudioService.instance.playSuccessSound();
       setState(() {
         _showSuccess = true;
         _score += 10;
       });
     } else if (_placed.length == _current.word.length) {
+      AudioService.instance.playFailureSound();
       _shakeCtrl.forward(from: 0);
     }
   }
@@ -152,6 +167,14 @@ class _WordBuilderGameState extends State<WordBuilderGame>
                           fontFamily: 'Nunito',
                         )),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline_rounded),
+                    color: GalaxyColors.textPrimary(isDark),
+                    onPressed: _showGuide,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(

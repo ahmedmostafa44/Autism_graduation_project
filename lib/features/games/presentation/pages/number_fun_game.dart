@@ -5,6 +5,8 @@ import 'package:autism_app/core/services/game_result_service.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
+import 'package:autism_app/core/services/audio_service.dart';
+import 'package:autism_app/core/widgets/game_guide_dialog.dart';
 
 const _objects = [
   ('⭐', 'Stars'),   ('🍎', 'Apples'),  ('🐸', 'Frogs'),
@@ -41,6 +43,17 @@ class _NumberFunGameState extends State<NumberFunGame>
     _bounceCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
     _nextRound();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showGuide());
+  }
+
+  void _showGuide() {
+    GameGuideDialog.show(
+      context,
+      title: 'Number Fun',
+      description: 'Count the items on the screen and tap the correct number below!',
+      icon: '🔢',
+      isDark: context.read<ThemeBloc>().state.isDark,
+    );
   }
 
   @override
@@ -84,6 +97,13 @@ class _NumberFunGameState extends State<NumberFunGame>
   void _answer(int choice) {
     if (_feedback != null) return;
     final correct = choice == _count;
+
+    if (correct) {
+      AudioService.instance.playSuccessSound();
+    } else {
+      AudioService.instance.playFailureSound();
+    }
+
     setState(() {
       _feedback = correct;
       if (correct) {
@@ -134,6 +154,14 @@ class _NumberFunGameState extends State<NumberFunGame>
                           fontFamily: 'Nunito',
                         )),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline_rounded),
+                    color: GalaxyColors.textPrimary(isDark),
+                    onPressed: _showGuide,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 8),
                   // Streak badge
                   if (_streak >= 3)
                     Container(

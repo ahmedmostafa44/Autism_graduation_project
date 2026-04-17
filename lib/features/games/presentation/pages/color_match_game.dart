@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
+import 'package:autism_app/core/services/audio_service.dart';
+import 'package:autism_app/core/widgets/game_guide_dialog.dart';
 
 class _ColorEntry {
   final String name;
@@ -55,6 +57,17 @@ class _ColorMatchGameState extends State<ColorMatchGame>
     _feedbackCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
     _nextRound();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showGuide());
+  }
+
+  void _showGuide() {
+    GameGuideDialog.show(
+      context,
+      title: 'Color Match',
+      description: 'Tap the color block that matches the meaning of the word! Try not to be tricked by the ink color.',
+      icon: '🎨',
+      isDark: context.read<ThemeBloc>().state.isDark,
+    );
   }
 
   @override
@@ -88,6 +101,7 @@ class _ColorMatchGameState extends State<ColorMatchGame>
 
   void _onCorrect() {
     _timer?.cancel();
+    AudioService.instance.playSuccessSound();
     setState(() {
       _score += _timeLeft * 2;
       _lastCorrect = true;
@@ -96,6 +110,7 @@ class _ColorMatchGameState extends State<ColorMatchGame>
   }
 
   void _onWrong() {
+    AudioService.instance.playFailureSound();
     setState(() {
       _lives--;
       _lastCorrect = false;
@@ -162,6 +177,11 @@ class _ColorMatchGameState extends State<ColorMatchGame>
                           color: GalaxyColors.textPrimary(isDark),
                           fontFamily: 'Nunito',
                         )),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline_rounded),
+                    color: GalaxyColors.textPrimary(isDark),
+                    onPressed: _showGuide,
                   ),
                   // Lives
                   Row(

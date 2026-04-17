@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
+import 'package:autism_app/core/services/audio_service.dart';
+import 'package:autism_app/core/widgets/game_guide_dialog.dart';
 
 // ── Story data ────────────────────────────────────────────────────────────────
 class _StoryStep {
@@ -90,6 +92,17 @@ class _SequencingGameState extends State<SequencingGame>
     _bounceCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500));
     _loadStory();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showGuide());
+  }
+
+  void _showGuide() {
+    GameGuideDialog.show(
+      context,
+      title: 'Sequencing',
+      description: 'Put the steps in the correct order to complete the story!',
+      icon: '📖',
+      isDark: context.read<ThemeBloc>().state.isDark,
+    );
   }
 
   @override
@@ -148,6 +161,7 @@ class _SequencingGameState extends State<SequencingGame>
       }
     }
     if (correct) {
+      AudioService.instance.playSuccessSound();
       setState(() {
         _showSuccess = true;
         _score += 10;
@@ -155,6 +169,7 @@ class _SequencingGameState extends State<SequencingGame>
       });
       _bounceCtrl.forward(from: 0);
     } else {
+      AudioService.instance.playFailureSound();
       setState(() {
         _showError = true;
         _wrongIdx  = firstWrong;
@@ -227,6 +242,14 @@ class _SequencingGameState extends State<SequencingGame>
                   )),
                 ],
               )),
+              IconButton(
+                icon: const Icon(Icons.help_outline_rounded),
+                color: GalaxyColors.textPrimary(isDark),
+                onPressed: _showGuide,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

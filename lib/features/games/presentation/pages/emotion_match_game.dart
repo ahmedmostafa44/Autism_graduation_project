@@ -5,6 +5,8 @@ import 'package:autism_app/core/services/game_result_service.dart';
 import 'package:autism_app/core/theme/app_theme.dart';
 import 'package:autism_app/core/bloc/theme_bloc.dart';
 import 'package:autism_app/core/widgets/galaxy_widgets.dart';
+import 'package:autism_app/core/services/audio_service.dart';
+import 'package:autism_app/core/widgets/game_guide_dialog.dart';
 
 // ─── Game State ─────────────────────────────────────────────────────────────
 
@@ -70,6 +72,17 @@ class _EmotionMatchGameState extends State<EmotionMatchGame>
         vsync: this, duration: const Duration(milliseconds: 600));
     _winScale = CurvedAnimation(parent: _winController, curve: Curves.elasticOut);
     _initGame();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showGuide());
+  }
+
+  void _showGuide() {
+    GameGuideDialog.show(
+      context,
+      title: 'Emotion Match',
+      description: 'Flip the cards to find matching pairs of emotions and their names!',
+      icon: '😊',
+      isDark: context.read<ThemeBloc>().state.isDark,
+    );
   }
 
   @override
@@ -122,6 +135,7 @@ class _EmotionMatchGameState extends State<EmotionMatchGame>
         first.id != card.id;
 
     if (isMatch) {
+      AudioService.instance.playSuccessSound();
       setState(() {
         first.isMatched = true;
         card.isMatched = true;
@@ -141,6 +155,7 @@ class _EmotionMatchGameState extends State<EmotionMatchGame>
         );
       }
     } else {
+      AudioService.instance.playFailureSound();
       await Future.delayed(const Duration(milliseconds: 400));
       setState(() {
         first.isFlipped = false;
@@ -190,6 +205,14 @@ class _EmotionMatchGameState extends State<EmotionMatchGame>
                               fontFamily: 'Nunito',
                             )),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.help_outline_rounded),
+                        color: GalaxyColors.textPrimary(isDark),
+                        onPressed: _showGuide,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const SizedBox(width: 12),
                       GestureDetector(
                         onTap: _initGame,
                         child: Container(
